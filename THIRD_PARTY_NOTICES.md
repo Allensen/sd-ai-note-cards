@@ -5,6 +5,7 @@
 | 包 | 锁定版本 | 许可 |
 | --- | --- | --- |
 | @fontsource/noto-sans-sc | 5.3.1 | OFL-1.1 |
+| @fontsource/noto-serif-sc | 5.3.1 | OFL-1.1 |
 | @types/react | 19.3.0 | MIT |
 | @types/trusted-types | 2.0.7 | MIT |
 | csstype | 3.2.3 | MIT |
@@ -12,11 +13,12 @@
 | fflate | 0.8.3 | MIT |
 | html-to-image | 1.11.13 | MIT |
 | lucide-react | 1.55.0 | ISC |
+| lxgw-wenkai-webfont | 1.7.0 | MIT |
 | marked | 18.1.0 | MIT |
 | react | 19.3.0 | MIT |
 | react-dom | 19.3.0 | MIT |
 | scheduler | 0.28.0 | MIT |
 
-Noto Sans SC 字体使用 SIL Open Font License 1.1。Marked 用于解析 Markdown，DOMPurify 用于清理输出，html-to-image 用于 DOM 到 PNG，fflate 用于 ZIP，Lucide 用于界面图标，React 用于界面状态管理。未复制参考产品的源码或品牌资产。
+Noto Sans SC、Noto Serif SC 与 LXGW WenKai 字体使用 SIL Open Font License 1.1；文楷 Web 分包采用 MIT，原始 OFL 文本一并保留。Marked 用于解析 Markdown，DOMPurify 用于清理输出，html-to-image 用于 DOM 到 PNG，fflate 用于 ZIP，Lucide 用于界面图标，React 用于界面状态管理。未复制参考产品的源码或品牌资产。
 
 运行 `npm run licenses` 可以按本地锁定依赖重新生成此文件。

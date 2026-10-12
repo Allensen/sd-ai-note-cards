@@ -61,7 +61,9 @@ test('375px 移动端可编辑、翻页和导出', async ({ page }, testInfo) =>
   await expect(page.getByLabel('正文', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /卡片预览/ }).click(); await ready(page); await noOverflow(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
-  await page.getByRole('button', { name: '墨黑主题' }).click(); await ready(page);
+  await page.getByRole('button', { name: '样式设置', exact: true }).click();
+  await page.getByRole('button', { name: '墨黑主题' }).click();
+  await page.getByRole('button', { name: '卡片预览', exact: true }).click(); await ready(page);
   await page.screenshot({ path: testInfo.outputPath('mobile.png'), fullPage: true });
   const promise = page.waitForEvent('download'); await page.getByRole('button', { name: '导出当前图片', exact: true }).click(); await promise;
   await page.getByRole('button', { name: '编辑内容', exact: true }).click(); await expect(page.getByLabel('正文', { exact: true })).toBeVisible();
@@ -87,7 +89,7 @@ test('手动分页边界、长标题、大字号和组合字符', async ({ page 
   await expect(card(page)).toContainText('第一页'); await noOverflow(page);
   await page.getByRole('button', { name: '下一张', exact: true }).click(); await expect(card(page)).toContainText('第二页');
   await page.getByLabel('卡片标题').fill('一二三四五六七八九十'.repeat(6));
-  await page.getByLabel('字号').selectOption('25'); await page.getByLabel('画布').selectOption('square');
+  await page.getByLabel('字号', { exact: true }).fill('25'); await page.getByLabel('画布').selectOption('square');
   await ready(page); await noOverflow(page);
   await page.getByLabel('正文', { exact: true }).fill('🌱家庭👨‍👩‍👧‍👦一起学习 é '.repeat(30));
   await ready(page); await noOverflow(page);

@@ -8,7 +8,7 @@ test.use({ video: { mode: process.env.RECORD_DEMO ? 'on' : 'off', size: { width:
 test.describe('真实浏览器演示录制', () => {
   test.skip(!process.env.RECORD_DEMO, '设置 RECORD_DEMO=1 才录制');
   test('粘贴笔记、导出、同文切换版式', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('./');
     const exportButton = page.getByRole('button', { name: '导出当前图片', exact: true });
     await expect(exportButton).toBeEnabled();
     await page.getByRole('button', { name: '新建笔记', exact: true }).click();

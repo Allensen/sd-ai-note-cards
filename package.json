@@ -1,6 +1,6 @@
 {
   "name": "ai-note-cards",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "@fontsource/noto-sans-sc": "^5.3.1",
+    "@fontsource/noto-serif-sc": "^5.3.1",
     "dompurify": "^3.4.16",
     "fflate": "^0.8.3",
     "html-to-image": "^1.11.13",
     "lucide-react": "^1.55.0",
+    "lxgw-wenkai-webfont": "^1.7.0",
     "marked": "^18.1.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
