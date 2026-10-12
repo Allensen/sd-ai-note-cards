@@ -12,7 +12,7 @@ async function noOverflow(page: Page) {
 test('中文示例、主题、真实 PNG 导出和草稿恢复', async ({ page }, testInfo) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   const external: string[] = []; page.on('request', r => { if (new URL(r.url()).origin !== new URL(process.env.TEST_URL || 'http://127.0.0.1:4173').origin && !r.url().startsWith('data:')) external.push(r.url()); });
-  await page.goto('/'); await ready(page); await noOverflow(page);
+  await page.goto('./'); await ready(page); await noOverflow(page);
   await page.getByRole('button', { name: '浅苔主题' }).click(); await ready(page);
   await page.getByLabel('卡片标题').fill('中文导出验证：知识要能用'); await ready(page);
   const downloadPromise = page.waitForEvent('download');
@@ -23,7 +23,7 @@ test('中文示例、主题、真实 PNG 导出和草稿恢复', async ({ page }
   expect(errors).toEqual([]); expect(external).toEqual([]);
 });
 test('长中文与复杂格式分页不丢字，不溢出，ZIP 张数正确', async ({ page }, testInfo) => {
-  await page.goto('/'); await ready(page);
+  await page.goto('./'); await ready(page);
   const long = '这是一段需要完整保留的中文知识。认真理解，然后实践。'.repeat(75);
   await page.getByLabel('卡片标题').fill('长段落测试');
   await page.getByLabel('正文', { exact: true }).fill(`## 连续中文\n\n**${long}**\n\n---\n\n## 代码与列表\n\n1. 第一件事\n2. 第二件事\n\n\`\`\`text\n${'very_long_identifier_'.repeat(20)}\n\`\`\`\n\n| 方法 | 用途 |\n|---|---|\n| 复述 | 检查理解 |`);
@@ -42,7 +42,7 @@ test('长中文与复杂格式分页不丢字，不溢出，ZIP 张数正确', a
   for (const data of Object.values(files)) { expect(Buffer.from(data).readUInt32BE(16)).toBe(1080); expect(Buffer.from(data).readUInt32BE(20)).toBe(1080); }
 });
 test('导入、撤销、空状态、超限与不可信 Markdown', async ({ page }) => {
-  await page.goto('/'); await ready(page);
+  await page.goto('./'); await ready(page);
   await page.locator('input[type=file]').setInputFiles({ name: '笔记.md', mimeType: 'text/markdown', buffer: Buffer.from('# 导入中文笔记\n\n我的第一条知识。') });
   await ready(page); await expect(page.getByLabel('卡片标题')).toHaveValue('导入中文笔记');
   await page.getByRole('button', { name: '新建笔记', exact: true }).click();
@@ -57,7 +57,7 @@ test('导入、撤销、空状态、超限与不可信 Markdown', async ({ page 
   await expect(page.getByRole('alert')).toContainText('最多 20,000 字'); await expect(page.getByRole('button', { name: '导出当前图片', exact: true })).toBeDisabled();
 });
 test('375px 移动端可编辑、翻页和导出', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 375, height: 812 }); await page.goto('/');
+  await page.setViewportSize({ width: 375, height: 812 }); await page.goto('./');
   await expect(page.getByLabel('正文', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: /卡片预览/ }).click(); await ready(page); await noOverflow(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
@@ -67,7 +67,7 @@ test('375px 移动端可编辑、翻页和导出', async ({ page }, testInfo) =>
   await page.getByRole('button', { name: '编辑内容', exact: true }).click(); await expect(page.getByLabel('正文', { exact: true })).toBeVisible();
 });
 test('素材截图使用同一份提示词示例', async ({ page }, testInfo) => {
-  await page.goto('/'); await ready(page); await page.getByRole('button', { name: '提示词示例', exact: true }).click(); await ready(page);
+  await page.goto('./'); await ready(page); await page.getByRole('button', { name: '提示词示例', exact: true }).click(); await ready(page);
   await page.getByRole('button', { name: '提示词卡片', exact: true }).click(); await ready(page);
   await page.screenshot({ path: testInfo.outputPath('desktop.png'), fullPage: true });
   const promise = page.waitForEvent('download'); await page.getByRole('button', { name: '导出当前图片', exact: true }).click(); const d = await promise;
@@ -80,7 +80,7 @@ test('素材截图使用同一份提示词示例', async ({ page }, testInfo) =>
 });
 
 test('手动分页边界、长标题、大字号和组合字符', async ({ page }) => {
-  await page.goto('/'); await ready(page);
+  await page.goto('./'); await ready(page);
   await page.getByLabel('卡片标题').fill('边界验证');
   await page.getByLabel('正文', { exact: true }).fill('---\n\n第一页\n\n---\n\n---\n\n第二页\n\n---');
   await ready(page); await expect(card(page).locator('[data-card-count]')).toHaveText('01 / 02');
@@ -94,7 +94,7 @@ test('手动分页边界、长标题、大字号和组合字符', async ({ page 
 });
 
 test('提示词版式同文切换、长场景分页及 PNG 导出', async ({ page }, testInfo) => {
-  await page.goto('/'); await ready(page);
+  await page.goto('./'); await ready(page);
   await page.getByRole('button', { name: '提示词示例', exact: true }).click(); await ready(page);
   const before = await page.getByLabel('正文', { exact: true }).inputValue();
   await page.getByRole('button', { name: '提示词卡片', exact: true }).click(); await ready(page);

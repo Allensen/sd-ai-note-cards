@@ -100,6 +100,8 @@ npx playwright install chromium
 
 自动化覆盖中文导出尺寸、草稿恢复、主题切换、长中文完整性、列表/代码/表格分页、ZIP 页数、导入/撤销/空内容/超限、恶意 Markdown、375px 移动端。测试产物位于被忽略的 `test-results/`。
 
+`tests/demo.spec.ts` 和 `tests/demo-mobile.spec.ts` 提供可复现的浏览器演示录制；默认跳过。设置环境变量 `RECORD_DEMO=1` 后运行 `npx playwright test demo`，会录制 1920×1080 横屏和 540×960 竖屏的真实浏览器操作，原始 WebM 位于 `test-results/`。这是自动化操作实录，不是桌面或 Agent 对话录屏。
+
 目前主要验证 Chromium。Safari、Firefox 和真机 iOS 的字体、内存与下载行为仍需更多验证；手机长文建议逐张导出。
 
 ## 版本与许可
