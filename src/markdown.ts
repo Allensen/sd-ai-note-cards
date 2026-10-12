@@ -1,8 +1,10 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { decorateCardContent } from './cardIcons';
+import { illustration, illustrationFor } from './illustrations';
 
 // Rendering content never loads external images, embeds, styles or scripts.
-export function markdownBlocks(markdown: string, layout: 'note' | 'prompt' = 'note'): HTMLElement[] {
+export function markdownBlocks(markdown: string, layout: 'note' | 'prompt' = 'note', illustrated = false): HTMLElement[] {
   const renderer = new marked.Renderer();
   renderer.image = ({ text }) => `[图片：${text.replace(/[<>&]/g, '') || '未命名'}]`;
   const html = marked.parse(markdown, { async: false, breaks: true, gfm: true, renderer });
@@ -13,6 +15,8 @@ export function markdownBlocks(markdown: string, layout: 'note' | 'prompt' = 'no
   const root = document.createElement('div');
   root.innerHTML = safe;
   root.querySelectorAll('a').forEach(a => { a.removeAttribute('href'); });
+  if (illustrated) return illustratedBlocks(root);
+  decorateCardContent(root);
   // Make list items and table rows independent pagination units.
   const blocks: HTMLElement[] = [];
   for (const element of Array.from(root.children) as HTMLElement[]) {
@@ -53,6 +57,30 @@ export function markdownBlocks(markdown: string, layout: 'note' | 'prompt' = 'no
     if (context) context.append(block); else sections.push(block);
   }
   return sections;
+}
+
+// Keep each heading and its explanation together; oversized modules still use
+// the same measured grapheme pagination as every other card style.
+function illustratedBlocks(root: HTMLElement): HTMLElement[] {
+  const blocks: HTMLElement[] = [];
+  let section: HTMLElement | null = null;
+  let step = 0;
+  for (const node of Array.from(root.children) as HTMLElement[]) {
+    if (node.matches('h1,h2,h3,h4,h5,h6')) {
+      section = document.createElement('section');
+      section.dataset.lesson = String(step % 3);
+      section.dataset.step = String(++step).padStart(2, '0');
+      section.innerHTML = illustration(illustrationFor(node.textContent || ''));
+      section.append(node); blocks.push(section);
+    } else if (node.matches('hr,blockquote')) {
+      section = null; blocks.push(node);
+    } else if (section) section.append(node);
+    else {
+      if (node.tagName === 'P' && !blocks.length) node.dataset.intro = '';
+      blocks.push(node);
+    }
+  }
+  return blocks;
 }
 
 // Split at grapheme boundaries with DOM Ranges, preserving inline emphasis/code.

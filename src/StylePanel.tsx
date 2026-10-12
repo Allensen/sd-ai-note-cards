@@ -8,9 +8,17 @@ export function StylePanel({ draft, patch, busy, className }: { draft: Draft; pa
     <fieldset disabled={busy} className={styles.settings}>
       <section className={styles.settingSection}>
         <h3>排版风格</h3>
-        <div className={styles.styleChoices}>{([['editorial', '经典'], ['minimal', '留白'], ['notebook', '重点']] as const).map(([id, label]) => <button key={id} aria-label={label + '版式'} aria-pressed={draft.cardStyle === id} onClick={() => patch({ cardStyle: id })}><span className={`${styles.styleMini} ${styles[id]}`} aria-hidden="true"><i /><b>把知识<br />留下来</b><em /><em /><em /></span><span>{label}</span></button>)}</div>
+        <div className={styles.styleChoices}><button className={styles.illustratedChoice} aria-label="图解版式" aria-pressed={draft.cardStyle === 'illustrated'} onClick={() => patch({ cardStyle: 'illustrated', theme: 'blueprint', fontSize: 20, titleSize: 34, lineHeight: 1.6 })}><span className={`${styles.styleMini} ${styles.illustratedMini}`} aria-hidden="true"><i /><b>让知识<br />更好记</b><em /><em /></span><span><strong>图解知识卡片</strong><small>编号模块 · 主题插画</small></span></button>{([['editorial', '经典'], ['minimal', '留白'], ['notebook', '重点']] as const).map(([id, label]) => <button key={id} aria-label={label + '版式'} aria-pressed={draft.cardStyle === id} onClick={() => patch({ cardStyle: id })}><span className={`${styles.styleMini} ${styles[id]}`} aria-hidden="true"><i /><b>把知识<br />留下来</b><em /><em /><em /></span><span>{label}</span></button>)}</div>
         <div className={styles.layoutSwitch}>{([['note', '知识卡片'], ['prompt', '提示词卡片']] as const).map(([id, label]) => <button key={id} aria-pressed={draft.layout === id} onClick={() => patch({ layout: id })}>{label}</button>)}</div>
         {draft.layout === 'prompt' && <p className={styles.hint}>用「## 适用场景」「## 提示词正文」分区。</p>}
+        {draft.cardStyle === 'illustrated' && <div className={styles.seriesControls}>
+          <p className={styles.hint}>用 ## 小标题分成编号模块，插画按标题含义匹配；长内容自动续页。</p>
+          <label className={styles.controlLabel} htmlFor="series-label">栏目名称</label><input id="series-label" maxLength={12} value={draft.seriesLabel} onChange={e => patch({ seriesLabel: e.target.value })} placeholder="例如：图文教程" />
+          <label className={styles.controlLabel} htmlFor="highlight">标题强调词</label><input id="highlight" maxLength={20} value={draft.highlight} onChange={e => patch({ highlight: e.target.value })} placeholder="填写标题中要变橙色的文字" />
+          {draft.highlight && !draft.title.includes(draft.highlight) && <p className={styles.hint}>标题中没有这段文字，暂不高亮。</p>}
+          <button className={styles.coverToggle} aria-pressed={draft.includeCover} onClick={() => patch({ includeCover: !draft.includeCover })}><span>{draft.includeCover && <Check size={12} />}</span>附加系列封面</button>
+          {draft.includeCover && <><label className={styles.controlLabel} htmlFor="subtitle">封面导语</label><input id="subtitle" maxLength={70} value={draft.subtitle} onChange={e => patch({ subtitle: e.target.value })} placeholder="一句话说明这组卡片值得看的原因" /><p className={styles.hint}>封面提取前 3 个小标题作为目录，与正文一起编号、导出。</p></>}
+        </div>}
       </section>
       <section className={styles.settingSection}>
         <h3>卡片配色<span>{themes.find(t => t.id === draft.theme)?.name}</span></h3>

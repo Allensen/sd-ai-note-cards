@@ -1,4 +1,5 @@
 export const themes = [
+  { id: 'blueprint', name: '蓝橙', bg: '#fffdf5', ink: '#173b82', accent: '#1049bf' },
   { id: 'paper', name: '纸白', bg: '#faf7ee', ink: '#33362f', accent: '#98603d' },
   { id: 'sage', name: '浅苔', bg: '#e9efe4', ink: '#273e31', accent: '#44664a' },
   { id: 'ink', name: '墨黑', bg: '#272b29', ink: '#f0efe5', accent: '#c1d6a4' },
@@ -14,7 +15,11 @@ export type FontFamily = 'sans' | 'serif' | 'wenkai';
 export const fontFamilies: Record<FontFamily, string> = { sans: 'Noto Sans SC', serif: 'Noto Serif SC', wenkai: 'LXGW WenKai' };
 export interface Draft {
   layout: 'note' | 'prompt';
-  cardStyle: 'editorial' | 'minimal' | 'notebook';
+  cardStyle: 'illustrated' | 'editorial' | 'minimal' | 'notebook';
+  includeCover: boolean;
+  seriesLabel: string;
+  highlight: string;
+  subtitle: string;
   title: string;
   content: string;
   source: string;
@@ -34,6 +39,7 @@ export const STORAGE_KEY = 'ai-note-cards:draft:v1';
 export const LIBRARY_KEY = 'ai-note-cards:library:v1';
 export const sample: Draft = {
   layout: 'note', cardStyle: 'editorial',
+  includeCover: false, seriesLabel: '图解笔记', highlight: '', subtitle: '',
   title: '把 AI 回答，变成自己的知识',
   content: '## 先理解，再收藏\n\n收藏一段回答，不等于掌握一个知识。用自己的话讲一遍，才知道哪里还没懂。\n\n## 一张卡片，留下三件事\n\n1. **它是什么**：一句话说清核心意思。\n2. **何时有用**：记下与你有关的场景。\n3. **怎么使用**：留下能立刻尝试的步骤。\n\n> 学完之后，找一个真实问题试一试。',
   source: '我的 AI 学习笔记', question: '不看答案，我能讲清这三件事吗？',
@@ -46,6 +52,13 @@ export const demo: Draft = {
   content: '## 适用场景\n\n第一次接触一个 AI 概念，想先建立直觉，再理解它的边界。\n\n## 提示词正文\n\n请向一位不懂编程的学习者解释「上下文窗口」。\n\n1. 先用一句话说明它是什么。\n2. 用一个生活中的例子帮助我理解。\n3. 指出这个比喻在哪些地方不准确。\n4. 最后给我一道小问题，检查我是否理解。\n\n**要求**：少用术语；如果必须用，先解释它。',
   source: '我的常用提示词',
 };
+export const illustratedSample: Draft = {
+  ...sample, cardStyle: 'illustrated', theme: 'blueprint', fontSize: 20, titleSize: 34, lineHeight: 1.6,
+  title: '学到的知识，怎样真正记住？', highlight: '真正记住', seriesLabel: '学习方法',
+  subtitle: '3 个小动作，把「看过」变成「会用」。', question: '',
+  content: '学完别急着收藏，做张能随时回想的卡片。\n\n## 先理解：用自己的话讲\n\n合上原文，用 **一句话** 讲清它解决什么问题。讲不清的地方，再回去看。\n\n## 找场景：和真实问题连起来\n\n记下一个 **你会用到它的场景**，让抽象概念有具体的落点。\n\n## 做练习：马上试一次\n\n做一道小题，或完成一个小任务。**用过一次，比多看一遍更扎实。**\n\n> 下次打开卡片：先回想，再看答案。',
+  source: '我的学习方法笔记',
+};
 const bounded = (value: unknown, min: number, max: number, fallback: number) => typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 const str = (value: unknown, max: number) => typeof value === 'string' ? value.slice(0, max) : '';
 export function normalizeDraft(value: unknown): Draft | null {
@@ -54,7 +67,9 @@ export function normalizeDraft(value: unknown): Draft | null {
   if (typeof v.content !== 'string' || v.content.length > MAX_CONTENT) return null;
   return {
     layout: v.layout === 'prompt' ? 'prompt' : 'note',
-    cardStyle: v.cardStyle === 'minimal' || v.cardStyle === 'notebook' ? v.cardStyle : 'editorial',
+    cardStyle: v.cardStyle === 'minimal' || v.cardStyle === 'notebook' || v.cardStyle === 'illustrated' ? v.cardStyle : 'editorial',
+    includeCover: v.includeCover === true, seriesLabel: typeof v.seriesLabel === 'string' ? str(v.seriesLabel, 12) : '图解笔记',
+    highlight: str(v.highlight, 20), subtitle: str(v.subtitle, 70),
     title: str(v.title, 60), content: v.content, source: str(v.source, 60), question: str(v.question, 100),
     theme: themes.some(t => t.id === v.theme) ? v.theme as Theme : 'paper',
     ratio: v.ratio === 'square' ? 'square' : 'portrait',
@@ -65,8 +80,8 @@ export function normalizeDraft(value: unknown): Draft | null {
   };
 }
 export function readDraft(): Draft {
-  try { return normalizeDraft(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')) || sample; }
-  catch { return sample; }
+  try { return normalizeDraft(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')) || illustratedSample; }
+  catch { return illustratedSample; }
 }
 export function readLibrary(): SavedCard[] {
   try { return parseLibrary(JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]')); }

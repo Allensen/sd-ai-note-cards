@@ -3,7 +3,7 @@ import { toBlob } from 'html-to-image';
 import { zipSync } from 'fflate';
 import { ArrowDownToLine, ArrowLeft, ArrowRight, BookOpen, Bookmark, Check, FileText, Code2, Eye, EyeOff, LibraryBig, LoaderCircle, Plus, RotateCcw, Upload, X } from 'lucide-react';
 import { Card } from './Card';
-import { demo, MAX_CONTENT, readDraft, sample, STORAGE_KEY, LIBRARY_KEY, parseLibrary, readLibrary, type Draft, type SavedCard } from './model';
+import { demo, illustratedSample, MAX_CONTENT, readDraft, sample, STORAGE_KEY, LIBRARY_KEY, parseLibrary, readLibrary, type Draft, type SavedCard } from './model';
 import { StylePanel } from './StylePanel';
 import { Library } from './Library';
 import { markdownBlocks, paginate } from './markdown';
@@ -39,12 +39,15 @@ export function App() {
   const [revealed, setRevealed] = useState(false);
   const [scale, setScale] = useState(.6);
   const measure = useRef<HTMLElement>(null);
+  const coverMeasure = useRef<HTMLElement>(null);
   const preview = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const generation = useRef(0);
   const [retry, setRetry] = useState(0);
   const patch = (next: Partial<Draft>) => { setPending(true); setDraft(value => ({ ...value, ...next })); };
+  const hasCover = draft.cardStyle === 'illustrated' && draft.includeCover;
+  const cardText = draft.title + draft.content + draft.source + draft.question + draft.seriesLabel + draft.subtitle + '图解笔记 知识卡片 提示词卡片 复习时问自己 先回想再揭晓 试着在心里回答上面的问题 这条知识是什么可以用在哪里 不用逐字记忆用自己的话讲清楚 留下一张卡片给未来的自己 随时回看主动回想试着使用 NO. 记录理解复习 0123456789 /';
 
   useEffect(() => {
     const id = ++generation.current;
@@ -53,10 +56,16 @@ export function App() {
       try {
         if (draft.content.length > MAX_CONTENT) throw new Error('正文最多 20,000 字，请分成几份笔记。当前输入仍保留在编辑框中。');
         if (!draft.content.trim()) { if (id === generation.current) setPages([]); return; }
-        await waitForFonts(draft.title + draft.content + draft.source + draft.question + '知识卡片 提示词卡片 复习时问自己 先回想再揭晓 试着在心里回答上面的问题 这条知识是什么可以用在哪里 不用逐字记忆用自己的话讲清楚 NO. 记录理解复习 0123456789 /', draft.fontFamily);
+        await waitForFonts(cardText, draft.fontFamily);
         if (id !== generation.current || !measure.current) return;
         const body = measure.current.querySelector<HTMLElement>('[data-card-body]')!;
-        const next = paginate(markdownBlocks(draft.content, draft.layout), body);
+        const next = paginate(markdownBlocks(draft.content, draft.layout, draft.cardStyle === 'illustrated'), body);
+        if (hasCover) {
+          const coverBody = coverMeasure.current?.querySelector<HTMLElement>('[data-card-body]');
+          if (!coverBody || coverBody.scrollHeight > coverBody.clientHeight || coverBody.scrollWidth > coverBody.clientWidth) throw new Error('封面内容超出画布，请精简标题、导语或小标题，或切换为 3:4 竖版。正文仍保留。');
+          if (next.length >= 60) throw new Error('加上封面后超过 60 张卡片，请分批整理。');
+          next.unshift('');
+        }
         if (id === generation.current) { setPages(next); setPage(current => Math.min(current, Math.max(0, next.length - 1))); }
       } catch (reason) {
         if (id === generation.current) { setError(reason instanceof Error ? reason.message : '排版失败，请重试。'); setPages([]); }
@@ -84,7 +93,7 @@ export function App() {
   }, [draft.ratio]);
   useEffect(() => () => { if (result) URL.revokeObjectURL(result.url); }, [result]);
 
-  function replace(next: Draft) { setUndo(draft); setPending(true); setDraft(next); setPage(0); setActiveId(null); setReviewMode(false); setNotice('已替换内容，可撤销'); }
+  function replace(next: Draft) { setUndo(draft); setPending(true); setDraft({ ...next }); setPage(0); setActiveId(null); setReviewMode(false); setNotice('已替换内容，可撤销'); }
   function newDraft() { replace({ ...draft, title: '', content: '', source: '', question: '' }); setView('editor'); setMobileTab('edit'); }
   function commitLibrary(next: SavedCard[]) {
     try { localStorage.setItem(LIBRARY_KEY, JSON.stringify(next)); setLibrary(next); return true; }
@@ -135,16 +144,18 @@ export function App() {
     setBusy('正在准备字体'); setNotice('');
     const host = document.createElement('div'); host.className = styles.exportHost; document.body.append(host);
     try {
-      const text = draft.title + draft.content + draft.source + draft.question + '知识卡片 提示词卡片 复习时问自己 NO. 记录理解复习 0123456789 /';
-      const fontEmbedCSS = await embedFonts(text, draft.fontFamily);
+      const fontEmbedCSS = await embedFonts(cardText, draft.fontFamily);
       const indices = all ? pages.map((_, i) => i) : [page];
       const files: Record<string, Uint8Array> = {};
       let single: Blob | null = null;
       for (let i = 0; i < indices.length; i++) {
         setBusy(`正在导出 ${i + 1} / ${indices.length}`); await nextFrame();
-        const clone = preview.current.cloneNode(true) as HTMLElement;
-        clone.querySelector('[data-card-body]')!.innerHTML = pages[indices[i]];
-        clone.querySelector('[data-card-serial]')!.textContent = `NO. ${String(indices[i] + 1).padStart(2, '0')}`;
+        const isCover = hasCover && indices[i] === 0;
+        const clone = (isCover ? coverMeasure.current! : measure.current!).cloneNode(true) as HTMLElement;
+        if (!isCover) clone.querySelector('[data-card-body]')!.innerHTML = pages[indices[i]];
+        clone.querySelector('[data-card-serial]')!.textContent = `${draft.cardStyle === 'illustrated' ? '' : 'NO. '}${String(indices[i] + 1).padStart(2, '0')}`;
+        const totalBadge = clone.querySelector('[data-card-total]');
+        if (totalBadge) totalBadge.textContent = '/' + String(pages.length).padStart(2, '0');
         clone.querySelector('[data-card-count]')!.textContent = `${String(indices[i] + 1).padStart(2, '0')} / ${String(pages.length).padStart(2, '0')}`;
         host.replaceChildren(clone);
         const blob = await toBlob(clone, { pixelRatio: 1.8, fontEmbedCSS, width: 600, height: draft.ratio === 'square' ? 600 : 800 });
@@ -180,6 +191,7 @@ export function App() {
         <section className={[styles.editorPanel, mobileTab !== 'edit' ? styles.mobileHidden : ''].join(' ')} aria-labelledby="edit-title">
           <div className={styles.panelHeading}><h2 id="edit-title"><FileText size={16} />编辑内容</h2><button className={styles.iconButton} title="新建笔记，可撤销" aria-label="新建笔记" onClick={newDraft} disabled={!!busy}><Plus size={18} /></button></div>
           <div className={styles.inputTools}><button onClick={() => file.current?.click()} disabled={!!busy}><Upload size={14} />导入文件</button><div className={styles.exampleMenu}><span>试用示例</span><button onClick={() => replace(sample)} disabled={!!busy} aria-label="学习笔记示例">笔记</button><button onClick={() => replace(demo)} disabled={!!busy} aria-label="提示词示例">提示词</button></div></div>
+          <button className={styles.illustratedExample} onClick={() => replace(illustratedSample)} disabled={!!busy} aria-label="图解知识卡片示例"><BookOpen size={18} /><span><strong>试试图解知识卡片</strong><small>编号模块 · 彩色插画 · 配套封面</small></span><ArrowRight size={15} /></button>
           <input ref={file} type="file" accept=".md,.markdown,.txt,text/plain,text/markdown" onChange={importFile} hidden />
           <fieldset className={styles.fields} disabled={!!busy}>
             <label htmlFor="title">卡片标题<span>{draft.title.length}/60</span></label>
@@ -198,7 +210,7 @@ export function App() {
         <section className={[styles.previewPanel, mobileTab !== 'preview' ? styles.mobileHidden : ''].join(' ')} aria-labelledby="preview-title">
           <div className={styles.previewHead}><h2 id="preview-title">{reviewMode ? '温习这条知识' : '卡片预览'}<span>{pending ? '排版中' : pages.length + ' 张'}</span></h2><div className={styles.previewMode}><button aria-pressed={!reviewMode} onClick={() => setReviewMode(false)}>预览</button><button aria-pressed={reviewMode} onClick={() => setReviewMode(true)}><EyeOff size={13} />复习一下</button></div></div>
           <div className={styles.stage} ref={stage} aria-busy={pending}>
-            {error ? <div className={styles.empty} role="alert"><FileText size={34} /><h3>暂时无法生成卡片</h3><p>{error}</p><button onClick={() => { setPending(true); setRetry(v => v + 1); }}>重新排版</button></div> : !pages.length ? <div className={styles.empty}><BookOpen size={42} strokeWidth={1} /><h3>{pending ? '正在准备中文字体' : '第一张卡片，从一句话开始'}</h3><p>{pending ? '字体准备好后会自动排版' : '在编辑区粘贴内容，预览会出现在这里。'}</p></div> : <div className={styles.cardFrame} style={{ width: 600 * scale, height: (draft.ratio === 'square' ? 600 : 800) * scale, borderRadius: draft.radius * scale } as CSSProperties}><div className={styles.scaledCard} style={{ transform: 'scale(' + scale + ')' }}><Card ref={preview} draft={draft} html={pages[page] || ''} page={page + 1} total={pages.length} concealed={reviewMode && !revealed} /></div>{pending && <div className={styles.updating}>正在更新排版…</div>}</div>}
+            {error ? <div className={styles.empty} role="alert"><FileText size={34} /><h3>暂时无法生成卡片</h3><p>{error}</p><button onClick={() => { setPending(true); setRetry(v => v + 1); }}>重新排版</button></div> : !pages.length ? <div className={styles.empty}><BookOpen size={42} strokeWidth={1} /><h3>{pending ? '正在准备中文字体' : '第一张卡片，从一句话开始'}</h3><p>{pending ? '字体准备好后会自动排版' : '在编辑区粘贴内容，预览会出现在这里。'}</p></div> : <div className={styles.cardFrame} style={{ width: 600 * scale, height: (draft.ratio === 'square' ? 600 : 800) * scale, borderRadius: draft.radius * scale } as CSSProperties}><div className={styles.scaledCard} style={{ transform: 'scale(' + scale + ')' }}><Card ref={preview} draft={draft} html={pages[page] || ''} page={page + 1} total={pages.length} isCover={hasCover && page === 0} concealed={reviewMode && !revealed} /></div>{pending && <div className={styles.updating}>正在更新排版…</div>}</div>}
           </div>
           {reviewMode && pages.length > 0 && <div className={styles.reviewBar}><button className={styles.primary} disabled={pending} onClick={() => setRevealed(!revealed)}>{revealed ? <EyeOff size={15} /> : <Eye size={15} />}{revealed ? '再次遮住答案' : '显示答案'}</button>{revealed && activeEntry && !dirty && <button className={styles.secondary} onClick={() => { if (commitLibrary(library.map(item => item.id === activeId ? { ...item, reviewedAt: Date.now() } : item))) setNotice('已记录本次复习。'); }}><Check size={15} />记为已复习</button>}<span>{revealed ? '能用自己的话讲清楚了吗？' : '先用自己的话回答，再对照笔记。'}</span></div>}
           <div className={styles.pagination}><button aria-label="上一张" onClick={() => setPage(p => p - 1)} disabled={disabled || page === 0}><ArrowLeft size={16} /></button><span>{pages.length ? page + 1 + ' / ' + pages.length : '0 / 0'}</span><button aria-label="下一张" onClick={() => setPage(p => p + 1)} disabled={disabled || page >= pages.length - 1}><ArrowRight size={16} /></button><span className={styles.dimensions}>1080 × {draft.ratio === 'square' ? '1080' : '1440'} px</span></div>
@@ -209,6 +221,6 @@ export function App() {
       </main>
     </div>
     <div className={styles.status} role="status" aria-live="polite"><span>{notice || '你的内容仅在本机处理。保存一张，随时温习。'}</span>{result && <a href={result.url} download={result.name}>重新下载</a>}{undoLibrary && <button onClick={() => { if (library.length < 100 && commitLibrary(library.some(item => item.id === undoLibrary.id) ? library : [undoLibrary, ...library])) { setUndoLibrary(null); setNotice('已恢复移除的笔记。'); } }}><RotateCcw size={13} />撤销移除</button>}</div>
-    <div className={styles.measure} aria-hidden="true"><Card ref={measure} draft={draft} html="" page={1} total={1} /></div>
+    <div className={styles.measure} aria-hidden="true"><Card ref={measure} draft={draft} html="" page={1} total={1} />{hasCover && <Card ref={coverMeasure} draft={draft} html="" page={1} total={1} isCover />}</div>
   </div>;
 }
