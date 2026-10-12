@@ -28,3 +28,7 @@
 .footer { flex:none;display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:24px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;line-height:1.5;color:var(--muted); }
 .footer > :first-child { overflow-wrap:anywhere;max-width:85%; }
 .footer > :last-child { white-space:nowrap;font-variant-numeric:tabular-nums; }
+.prompt .body [data-part=context] { background:var(--wash);padding:16px 20px;margin:0 0 22px;font-size:.91em;line-height:1.7; }
+.prompt .body [data-part=context] h1,.prompt .body [data-part=context] h2,.prompt .body [data-part=context] h3 { font-size:14px;letter-spacing:2px;margin:0 0 9px;color:var(--muted); }
+.prompt .body [data-part=context] > :last-child { margin-bottom:0; }
+.prompt .body [data-part=prompt-label] { font-size:14px;letter-spacing:2px;margin:0 0 12px;color:var(--accent); }

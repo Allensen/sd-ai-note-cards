@@ -2,7 +2,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
 // Rendering content never loads external images, embeds, styles or scripts.
-export function markdownBlocks(markdown: string): HTMLElement[] {
+export function markdownBlocks(markdown: string, layout: 'note' | 'prompt' = 'note'): HTMLElement[] {
   const renderer = new marked.Renderer();
   renderer.image = ({ text }) => `[图片：${text.replace(/[<>&]/g, '') || '未命名'}]`;
   const html = marked.parse(markdown, { async: false, breaks: true, gfm: true, renderer });
@@ -38,7 +38,21 @@ export function markdownBlocks(markdown: string): HTMLElement[] {
   if (!blocks.length && root.textContent?.trim()) {
     const p = document.createElement('p'); p.textContent = root.textContent; blocks.push(p);
   }
-  return blocks;
+  if (layout !== 'prompt') return blocks;
+  const sections: HTMLElement[] = [];
+  let context: HTMLElement | null = null;
+  for (const block of blocks) {
+    if (block.matches('h1,h2,h3,h4,h5,h6')) {
+      context = null;
+      if (/^(适用场景|使用场景)$/.test(block.textContent?.trim() || '')) {
+        context = document.createElement('div'); context.dataset.part = 'context';
+        sections.push(context);
+      } else if (block.textContent?.trim() === '提示词正文') block.dataset.part = 'prompt-label';
+    }
+    if (block.tagName === 'HR') context = null;
+    if (context) context.append(block); else sections.push(block);
+  }
+  return sections;
 }
 
 // Split at grapheme boundaries with DOM Ranges, preserving inline emphasis/code.

@@ -45,10 +45,10 @@ export function App() {
       try {
         if (draft.content.length > MAX_CONTENT) throw new Error('正文最多 20,000 字，请分成几份笔记。当前输入仍保留在编辑框中。');
         if (!draft.content.trim()) { if (id === generation.current) setPages([]); return; }
-        await waitForFonts(draft.title + draft.content + draft.source + '知识卡片 AI NOTES 0123456789 /');
+        await waitForFonts(draft.title + draft.content + draft.source + '知识卡片 提示词卡片 PROMPT AI NOTES 0123456789 /');
         if (id !== generation.current || !measure.current) return;
         const body = measure.current.querySelector<HTMLElement>('[data-card-body]')!;
-        const next = paginate(markdownBlocks(draft.content), body);
+        const next = paginate(markdownBlocks(draft.content, draft.layout), body);
         if (id === generation.current) { setPages(next); setPage(current => Math.min(current, Math.max(0, next.length - 1))); }
       } catch (reason) {
         if (id === generation.current) { setError(reason instanceof Error ? reason.message : '排版失败，请重试。'); setPages([]); }
@@ -92,7 +92,7 @@ export function App() {
     setBusy('正在准备字体'); setNotice('');
     const host = document.createElement('div'); host.className = styles.exportHost; document.body.append(host);
     try {
-      const text = draft.title + draft.content + draft.source + '知识卡片 AI NOTES 0123456789 /';
+      const text = draft.title + draft.content + draft.source + '知识卡片 提示词卡片 PROMPT AI NOTES 0123456789 /';
       const fontEmbedCSS = await embedFonts(text);
       const indices = all ? pages.map((_, i) => i) : [page];
       const files: Record<string, Uint8Array> = {};
@@ -153,6 +153,7 @@ export function App() {
       <section className={`${styles.previewPanel} ${mobileTab !== 'preview' ? styles.mobileHidden : ''}`} aria-labelledby="preview-title">
         <div className={styles.previewHead}><div><span className={styles.step}>02 / 排版</span><h2 id="preview-title">让知识，有自己的样子</h2></div><span className={styles.live}>{pending ? '正在排版' : `${pages.length} 张卡片`}</span></div>
         <fieldset className={styles.options} disabled={!!busy}>
+          <div className={styles.layoutRow}><span>版式</span><div className={styles.layoutSwitch}><button aria-pressed={draft.layout === 'note'} onClick={() => patch({ layout: 'note' })}>知识卡片</button><button aria-pressed={draft.layout === 'prompt'} onClick={() => patch({ layout: 'prompt' })}>提示词卡片</button></div>{draft.layout === 'prompt' && <span className={styles.layoutHint}>用 ## 适用场景、## 提示词正文 分区</span>}</div>
           <div className={styles.optionGroup}><span>主题</span><div className={styles.themeList}>{([['paper', '纸白'], ['sage', '浅苔'], ['ink', '墨黑']] as const).map(([key, name]) => <button key={key} aria-label={`${name}主题`} aria-pressed={draft.theme === key} className={`${styles.themeButton} ${styles[key]}`} onClick={() => patch({ theme: key })}><span />{name}{draft.theme === key && <Check size={12} />}</button>)}</div></div>
           <div className={styles.optionGroup}><label htmlFor="ratio">画布</label><select id="ratio" value={draft.ratio} onChange={e => patch({ ratio: e.target.value as Draft['ratio'] })}><option value="portrait">3:4 竖版</option><option value="square">1:1 方形</option></select></div>
           <div className={styles.optionGroup}><label htmlFor="font-size">字号</label><select id="font-size" value={draft.fontSize} onChange={e => patch({ fontSize: Number(e.target.value) })}><option value={21}>紧凑</option><option value={23}>标准</option><option value={25}>大字</option></select></div>

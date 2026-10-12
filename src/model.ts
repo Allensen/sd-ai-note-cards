@@ -1,6 +1,7 @@
 export type Theme = 'paper' | 'sage' | 'ink';
 export type Ratio = 'portrait' | 'square';
 export interface Draft {
+  layout: 'note' | 'prompt';
   title: string;
   content: string;
   source: string;
@@ -11,6 +12,7 @@ export interface Draft {
 export const MAX_CONTENT = 20000;
 export const STORAGE_KEY = 'ai-note-cards:draft:v1';
 export const sample: Draft = {
+  layout: 'note',
   title: '把 AI 回答，变成自己的知识',
   content: '## 先理解，再收藏\n\n收藏一段回答，不等于掌握一个知识。试着用自己的话，把它讲给刚接触这个概念的人听。\n\n## 一张卡片，留下三件事\n\n1. **它是什么**：用一句话说清核心意思。\n2. **何时有用**：记下一个与你有关的场景。\n3. **怎么使用**：留下一个能立刻尝试的步骤。\n\n> 下次复习时，先遮住答案，再问自己：我能讲明白吗？',
   source: '我的 AI 学习笔记',
@@ -27,6 +29,7 @@ export function readDraft(): Draft {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if (!value || typeof value.content !== 'string' || value.content.length > MAX_CONTENT) return sample;
     return {
+      layout: value.layout === 'prompt' ? 'prompt' : 'note',
       title: typeof value.title === 'string' ? value.title.slice(0, 60) : sample.title,
       content: value.content,
       source: typeof value.source === 'string' ? value.source.slice(0, 60) : '',

@@ -68,6 +68,7 @@ test('375px 移动端可编辑、翻页和导出', async ({ page }, testInfo) =>
 });
 test('素材截图使用同一份提示词示例', async ({ page }, testInfo) => {
   await page.goto('/'); await ready(page); await page.getByRole('button', { name: '提示词示例', exact: true }).click(); await ready(page);
+  await page.getByRole('button', { name: '提示词卡片', exact: true }).click(); await ready(page);
   await page.screenshot({ path: testInfo.outputPath('desktop.png'), fullPage: true });
   const promise = page.waitForEvent('download'); await page.getByRole('button', { name: '导出当前图片', exact: true }).click(); const d = await promise;
   await d.saveAs(testInfo.outputPath('same-example.png'));
@@ -78,7 +79,7 @@ test('素材截图使用同一份提示词示例', async ({ page }, testInfo) =>
   }
 });
 
-test('手动分页边界、长标题、大字号和空表格有明确结果', async ({ page }) => {
+test('手动分页边界、长标题、大字号和组合字符', async ({ page }) => {
   await page.goto('/'); await ready(page);
   await page.getByLabel('卡片标题').fill('边界验证');
   await page.getByLabel('正文', { exact: true }).fill('---\n\n第一页\n\n---\n\n---\n\n第二页\n\n---');
@@ -90,4 +91,27 @@ test('手动分页边界、长标题、大字号和空表格有明确结果', as
   await ready(page); await noOverflow(page);
   await page.getByLabel('正文', { exact: true }).fill('🌱家庭👨‍👩‍👧‍👦一起学习 é '.repeat(30));
   await ready(page); await noOverflow(page);
+});
+
+test('提示词版式同文切换、长场景分页及 PNG 导出', async ({ page }, testInfo) => {
+  await page.goto('/'); await ready(page);
+  await page.getByRole('button', { name: '提示词示例', exact: true }).click(); await ready(page);
+  const before = await page.getByLabel('正文', { exact: true }).inputValue();
+  await page.getByRole('button', { name: '提示词卡片', exact: true }).click(); await ready(page);
+  await expect(page.getByLabel('正文', { exact: true })).toHaveValue(before);
+  await expect(card(page).locator('[data-part=context]')).toContainText('第一次接触一个 AI 概念');
+  await expect(card(page).locator('[data-part=prompt-label]')).toHaveText('提示词正文'); await noOverflow(page);
+  const promise = page.waitForEvent('download'); await page.getByRole('button', { name: '导出当前图片', exact: true }).click(); const d = await promise;
+  await d.saveAs(testInfo.outputPath('prompt.png')); await page.getByRole('button', { name: '知识卡片', exact: true }).click(); await ready(page);
+  await expect(card(page).locator('[data-part=context]')).toHaveCount(0); await expect(page.getByLabel('正文', { exact: true })).toHaveValue(before);
+  await page.getByRole('button', { name: '提示词卡片', exact: true }).click();
+  const longContext = '这是适用场景的长段落，不应当丢失。'.repeat(60);
+  await page.getByLabel('正文', { exact: true }).fill(`## 适用场景\n\n${longContext}\n\n## 提示词正文\n\n请帮我理解这段知识。`); await ready(page);
+  let text = '';
+  while (true) {
+    await noOverflow(page); text += await card(page).locator('[data-card-body]').innerText();
+    if (await page.getByRole('button', { name: '下一张', exact: true }).isDisabled()) break;
+    await page.getByRole('button', { name: '下一张', exact: true }).click();
+  }
+  expect(text.replace(/\s/g, '')).toContain(longContext); expect(text).toContain('请帮我理解这段知识');
 });

@@ -22,6 +22,12 @@
 - 自动保存当前浏览器的草稿，保存 Markdown 原文，新建和替换示例可撤销。
 - 桌面双栏工作台；手机编辑 / 预览切换。
 
+## 本次新增：提示词卡片版式
+
+在「版式」中选择「提示词卡片」，`## 适用场景` 下的内容会显示为独立说明区，`## 提示词正文` 以下为提示词主体。点「提示词示例」可以加载演示内容，再切换两种版式对比。切换只改变排版，不会改写原文。没有这些小标题的内容仍正常呈现。
+
+它沿用基础版的主题、分页、字体嵌入和导出。基础版已经可以收藏提示词文本；本次新增的是专用版式和两类内容的视觉区分。
+
 ## 本地运行
 
 建议 Node.js 22 LTS 或更新版本（本地也在 Node 20.20.2 验证）。
@@ -98,6 +104,17 @@ npx playwright install chromium
 
 ## 版本与许可
 
-基础演示版使用标签 `demo-v0.1-base`。后续演示改动将保留独立提交与标签，便于对照和恢复。
+基础演示版使用标签 `demo-v0.1-base`；新增提示词版式使用 `demo-v0.2-prompt`。两份版本来自真实开发提交。
+
+为了安全地对照旧版，建议在另一个目录运行：
+
+```sh
+git worktree add ../ai-note-cards-base demo-v0.1-base
+cd ../ai-note-cards-base
+npm ci
+npm run dev -- --port 4175
+```
+
+或用 `git diff demo-v0.1-base demo-v0.2-prompt -- src` 查看实际改动。不要在有未保存修改的工作区使用强制重置。
 
 原创代码采用 [MIT](LICENSE)。依赖和字体保留各自许可证，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与 `public/licenses/`。
