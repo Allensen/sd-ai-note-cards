@@ -35,6 +35,7 @@ export interface Draft {
 }
 export interface SavedCard { id: string; draft: Draft; updatedAt: number; reviewedAt: number | null; }
 export const MAX_CONTENT = 20000;
+// Keep the original keys so the project rename preserves existing browser data.
 export const STORAGE_KEY = 'ai-note-cards:draft:v1';
 export const LIBRARY_KEY = 'ai-note-cards:library:v1';
 export const sample: Draft = {

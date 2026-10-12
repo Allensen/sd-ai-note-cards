@@ -10,7 +10,7 @@ import { markdownBlocks, paginate } from './markdown';
 import { embedFonts, waitForFonts } from './fonts';
 import styles from './App.module.css';
 
-const repo = 'https://github.com/Allensen/ai-note-cards';
+const repo = 'https://github.com/Allensen/sd-ai-note-cards';
 const nextFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 function filename(title: string) { return (title.trim() || '知识卡片').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 70); }
 function download(blob: Blob, name: string) {
@@ -179,7 +179,7 @@ export function App() {
   return <div className={styles.app}>
     <a href="#editor" className={styles.skip} onClick={() => { setView('editor'); setMobileTab('edit'); }}>跳到编辑区</a>
     <header className={styles.topbar}>
-      <button className={styles.brand} onClick={() => setView('editor')} aria-label="AI 知识卡片，返回编辑器"><span className={styles.mark}><BookOpen size={22} strokeWidth={1.8} /></span><strong>AI 知识卡片</strong><span className={styles.brandTag}>把知识留给自己</span></button>
+      <button className={styles.brand} onClick={() => setView('editor')} aria-label="sd-ai-note-cards，返回编辑器"><span className={styles.mark}><BookOpen size={22} strokeWidth={1.8} /></span><strong>sd-ai-note-cards</strong><span className={styles.brandTag}>把知识留给自己</span></button>
       <nav className={styles.topNav} aria-label="主导航"><button aria-current={view === 'editor' ? 'page' : undefined} onClick={() => setView('editor')}><FileText size={16} />编辑器</button><button aria-current={view === 'library' ? 'page' : undefined} onClick={() => setView('library')} disabled={!!busy}><LibraryBig size={16} />我的卡片库<span>{library.length}</span></button></nav>
       <div className={styles.topActions}><span className={styles.local}><i />本机保存 · 无需登录</span><a href={repo} target="_blank" rel="noreferrer" aria-label="GitHub 源码仓库"><Code2 size={19} /></a></div>
     </header>

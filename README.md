@@ -1,16 +1,16 @@
-# AI 知识卡片
+# sd-ai-note-cards
 
 把 AI 回答、学习笔记和常用提示词，整理成方便保存、复习与分享的中文卡片。
 
-这是 Allensen 的独立开源项目。面向所有想把有用内容留下来的人，暂用「AI 知识卡片」作为工作名。无需模型 API 密钥，无需登录，编辑和图片导出在浏览器中完成。
+sd-ai-note-cards 是 Allensen 的独立开源知识卡片工具，面向所有想把有用内容留下来的人。无需模型 API 密钥，无需登录，编辑和图片导出在浏览器中完成。
 
-- **在线工具**：https://Allensen.github.io/ai-note-cards/
-- **源码仓库**：https://github.com/Allensen/ai-note-cards
-- **反馈与功能建议**：https://github.com/Allensen/ai-note-cards/issues
+- **直接在线使用**：[打开 sd-ai-note-cards](https://allensen.github.io/sd-ai-note-cards/)
+- **源码仓库**：https://github.com/Allensen/sd-ai-note-cards
+- **反馈与功能建议**：https://github.com/Allensen/sd-ai-note-cards/issues
 
-在线工具用于直接制作卡片；源码仓库用于下载、修改、查看版本和反馈。
+在线工具托管在 GitHub Pages，观众可以直接在自己的电脑或手机打开，无需安装开发环境，也不依赖作者电脑开机。源码仓库用于下载、修改、查看版本和反馈。卡片保存在访问者自己的浏览器中，跨设备使用可通过卡片库备份与恢复迁移。
 
-![AI 知识卡片工作台预览](docs/preview.png)
+![sd-ai-note-cards 工作台预览](docs/preview.png)
 
 ## v0.4：图解知识卡片
 
@@ -40,7 +40,9 @@
 
 它沿用基础版的主题、分页、字体嵌入和导出。基础版已经可以收藏提示词文本；本次新增的是专用版式和两类内容的视觉区分。
 
-## 本地运行
+## 开发者本地运行
+
+普通使用者直接打开上方在线工具即可。以下地址是开发预览，`127.0.0.1` 只表示运行命令的这台电脑，不能作为观众的访问入口。
 
 建议 Node.js 22 LTS 或更新版本（本地也在 Node 20.20.2 验证）。
 
